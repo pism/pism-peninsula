@@ -1,6 +1,7 @@
 # Modeling feedbacks between ice flow and orographic precipitation
 
-This repository contains scripts 
+This repository contains scripts that prepare input data and run PISM to
+investigate feedbacks between ice flow and orographic precipitation.
 
 ## Input data
 
