@@ -3,12 +3,13 @@
 import numpy as np
 import PISM
 
-import formulas
 import flowline
+
+import matplotlib.pyplot as plt
 
 def real_geometry(grid):
 
-    def load(filename, prefix="profile/"):
+    def load(filename, prefix="data/"):
         data = np.genfromtxt(prefix + filename, delimiter=",", skip_header=1, usecols=(1,3))
         return data[:, 0], data[:, 1]
 
@@ -34,7 +35,6 @@ def real_geometry(grid):
     
     return geometry
 
-
 def synthetic_geometry(grid):
     geometry = PISM.Geometry(grid)
 
@@ -43,8 +43,8 @@ def synthetic_geometry(grid):
     with PISM.vec.Access([bed, thickness]):
         for i, j in grid.points():
             xi = grid.x(i)
-            b = formulas.bump(xi, x0=30e3, zmax=1600, zmin_l=-200, zmin_r=-500, sigma_l=4e3, sigma_r=25e3)
-            s = formulas.bump(xi, x0=35e3, zmax=2000, zmin_l=-300, zmin_r=30, sigma_l=10e3, sigma_r=30e3)
+            b = flowline.bump(xi, x0=30e3, zmax=1600, zmin_l=-200, zmin_r=-500, sigma_l=4e3, sigma_r=25e3)
+            s = flowline.bump(xi, x0=35e3, zmax=2000, zmin_l=-300, zmin_r=30, sigma_l=10e3, sigma_r=30e3)
             bed[i, j] = b
             thickness[i, j] = max(s - b, 0)
 
@@ -73,60 +73,64 @@ x = np.array(grid.x()) * 1e-3
 def F(v):
     return v.numpy()[0, :]
 
-fig = figure(plot_width=900, plot_height=500, title="Geometry",
-             tooltips=[("x", "@x"), ("y", "@y")])
+fig, ax = plt.subplots()
+fig.set_figwidth(10)
+fig.set_figheight(5)
 
-fig.line(x, F(real.ice_surface_elevation) - F(real.ice_thickness),
-         line_width=2, line_color="lightblue", legend_label="bottom surface")
-fig.line(x, F(real.ice_surface_elevation), line_width=2, line_color="blue", legend_label="top surface")
-fig.line(x, F(real.bed_elevation), line_width=2, line_color="black", legend_label="bed")
+ax.set_title("Geometry")
 
+ax.plot(x, F(real.ice_surface_elevation) - F(real.ice_thickness),
+        color="lightblue", label="bottom surface")
+ax.plot(x, F(real.ice_surface_elevation), color="blue", label="top surface")
+ax.plot(x, F(real.bed_elevation), color="black", label="bed")
 
-fig.line(x, F(synth.bed_elevation),
-         line_width=2, line_color="black", line_dash="dashed", legend_label="synthetic bed")
-fig.line(x, F(synth.ice_surface_elevation),
-         line_width=2, line_color="blue", line_dash="dashed", legend_label="synthetic surface")
+ax.plot(x, F(synth.bed_elevation), "--", color="black", label="synthetic bed")
+ax.plot(x, F(synth.ice_surface_elevation), "--", color="blue", label="synthetic surface")
 
-show(fig)
-
+ax.legend()
+fig.savefig("geometry.png")
 
 # Run the orographic precipitation model
 
 config = PISM.Context().config
-config.set_number("atmosphere.orographic_precipitation.wind_speed", 15)
-config.set_number("atmosphere.orographic_precipitation.water_vapor_scale_height", 2000)
+config.set_number("atmosphere.orographic_precipitation.wind_speed", 10)
+config.set_number("atmosphere.orographic_precipitation.water_vapor_scale_height", 2500)
 config.set_number("atmosphere.orographic_precipitation.fallout_time", 1000)
 config.set_number("atmosphere.orographic_precipitation.conversion_time", 1000)
 config.set_flag("atmosphere.orographic_precipitation.truncate", True)
-config.set_number("atmosphere.orographic_precipitation.background_precip_post", 0.0)
-config.set_number("atmosphere.orographic_precipitation.grid_size_factor", 20)
-config.set_number("atmosphere.orographic_precipitation.scale_factor", 1.3)
+config.set_number("atmosphere.orographic_precipitation.background_precip_post", 0.04)
+config.set_number("atmosphere.orographic_precipitation.grid_size_factor", 2)
+config.set_number("atmosphere.orographic_precipitation.scale_factor", 0.78)
 
+# The precipitation field from RACMO was computed using "real"
+# topography, so we need to tune LTOP using real topography as well.
 P = flowline.ltop(real)
 
-
 # Plot results and compare to the figure in the proposal.
-
-x = np.array(grid.x()) * 1e-3
 
 data = np.genfromtxt("precipitation.csv", delimiter=",", skip_header=1)
 P_x = data[:,0]
 RACMO = data[:, 1]
 SB04 = data[:, 2]
 
-fig = figure(plot_width=900, plot_height=500, title="Precipitation in m/year",
-             tooltips=[("x", "@x"), ("y", "@y")])
-fig.line(x, P, line_width=2, legend_label="PISM")
-fig.line(P_x + 35, RACMO, line_width=2, line_color="red", legend_label="RACMO")
-fig.line(P_x + 35, SB04, line_width=2, line_color="green", legend_label="SB04")
+fig, ax = plt.subplots()
+fig.set_figwidth(10)
+fig.set_figheight(5)
+
+ax.set_title("Precipitation in m/year")
+ax.grid()
+
+ax.plot(x, P, label="PISM")
+ax.plot(P_x + 35, RACMO, color="red", label="RACMO")
+ax.plot(P_x + 35, SB04, color="green", label="SB04")
 
 h = F(real.ice_surface_elevation)
 h /= 0.25 * h.max()
 
-fig.line(x, h,
-         line_width=2, line_color="black", line_dash="dashed", legend_label="scaled surface elevation")
+ax.plot(x, h, "--", color="black", label="scaled surface elevation")
 
-show(fig)
+ax.legend()
+fig.savefig("precipitation.png")
 
 # Create a "climate" input file. We can use this with "-atmosphere
 # given" to look at differences between runs with and without
