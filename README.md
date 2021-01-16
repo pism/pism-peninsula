@@ -35,7 +35,7 @@ See the directory `data`.
 
 ## Pre-processing data and running PISM
 
-The script `preprocess.py` created NetCDF files needed to run PISM.
+The script `preprocess.py` creates NetCDF files needed to run PISM.
 
 See the directory `pism` for the run script and a discussion of
 modeling choices.
