@@ -1,3 +1,10 @@
+#!/usr/bin/python3
+
+"""This script can be used to visualize the evolution of ice geometry
+in a flow-line simulation.
+
+"""
+
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")

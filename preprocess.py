@@ -5,7 +5,6 @@ import PISM
 
 import formulas
 import flowline
-import ltop
 
 def real_geometry(grid):
 
@@ -67,9 +66,7 @@ synth = synthetic_geometry(grid)
 
 synth.dump("geometry.nc")
 
-
-# In[7]:
-
+# Plot real and synthetic geometry
 
 x = np.array(grid.x()) * 1e-3
 
@@ -93,8 +90,7 @@ fig.line(x, F(synth.ice_surface_elevation),
 show(fig)
 
 
-# In[16]:
-
+# Run the orographic precipitation model
 
 config = PISM.Context().config
 config.set_number("atmosphere.orographic_precipitation.wind_speed", 15)
@@ -106,11 +102,10 @@ config.set_number("atmosphere.orographic_precipitation.background_precip_post", 
 config.set_number("atmosphere.orographic_precipitation.grid_size_factor", 20)
 config.set_number("atmosphere.orographic_precipitation.scale_factor", 1.3)
 
-P = ltop.run(real)
+P = flowline.ltop(real)
 
 
-# In[17]:
-
+# Plot results and compare to the figure in the proposal.
 
 x = np.array(grid.x()) * 1e-3
 
@@ -132,10 +127,6 @@ fig.line(x, h,
          line_width=2, line_color="black", line_dash="dashed", legend_label="scaled surface elevation")
 
 show(fig)
-
-
-# In[10]:
-
 
 # Create a "climate" input file. We can use this with "-atmosphere
 # given" to look at differences between runs with and without
@@ -170,7 +161,6 @@ with PISM.vec.Access(ice_extent_mask):
         ice_extent_mask[i, j] = xi > x_min and xi < x_max
 
 ice_extent_mask.dump("ice_extent_mask.nc")
-
 
 # Generate the spatially-variable precipitation factor used to remove
 # the patch of positive precipitation downwind from the ridge.
