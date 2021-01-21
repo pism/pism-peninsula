@@ -19,8 +19,8 @@ def bump(x, x0=0, zmin_l=-300, zmin_r=50, zmax=2000, sigma_l=10e3, sigma_r=25e3)
     A_l = zmax - zmin_l
     A_r = zmax - zmin_r
 
-    left  = zmin_r + A_r * np.exp(-(((x - x0) ** 2 / (2 * sigma_r ** 2))))
-    right = zmin_l + A_l * np.exp(-(((x - x0) ** 2 / (2 * sigma_l ** 2))))
+    left  = zmin_l + A_l * np.exp(-(((x - x0) ** 2 / (2 * sigma_l ** 2))))
+    right = zmin_r + A_r * np.exp(-(((x - x0) ** 2 / (2 * sigma_r ** 2))))
 
     return ((x <= x0) * left + (x > x0) * right)
 
@@ -32,7 +32,7 @@ def grid(x_min, x_max, dx):
     y0 = 0.0
 
     Lx = (x_max - x_min) / 2.0
-    Ly = 2.0 * dy
+    Ly = dy
     Mx = int((x_max - x_min) / dx) + 1
     My = 3
 

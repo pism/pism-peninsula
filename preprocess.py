@@ -43,8 +43,8 @@ def synthetic_geometry(grid):
     with PISM.vec.Access([bed, thickness]):
         for i, j in grid.points():
             xi = grid.x(i)
-            b = flowline.bump(xi, x0=30e3, zmax=1600, zmin_l=-200, zmin_r=-500, sigma_l=4e3, sigma_r=25e3)
-            s = flowline.bump(xi, x0=35e3, zmax=2000, zmin_l=-300, zmin_r=30, sigma_l=10e3, sigma_r=30e3)
+            b = flowline.bump(xi, x0=32e3, zmax=1625, zmin_l=-300, zmin_r=-650, sigma_l=7.5e3, sigma_r=20e3)
+            s = flowline.bump(xi, x0=32e3, zmax=2000, zmin_l=-200, zmin_r=30, sigma_l=10e3, sigma_r=30e3)
             bed[i, j] = b
             thickness[i, j] = max(s - b, 0)
 
@@ -151,12 +151,45 @@ temp.write(out)
 
 out.close()
 
+out = PISM.util.prepare_output("ocean.nc")
+
+x_s = 35e3
+
+TH_e = -2.0
+TH_w = 0.23
+TH = PISM.IceModelVec2S(grid, "theta_ocean", PISM.WITHOUT_GHOSTS)
+TH.set(TH_w)
+
+with PISM.vec.Access(TH):
+    for i,j in grid.points():
+        xi = grid.x(i)
+        TH[i, j] = (xi > x_s) * TH_e
+
+TH.metadata().set_string("units", "Celsius")
+TH.write(out)
+
+S_e = 34.84
+S_w = 34.70
+
+S = PISM.IceModelVec2S(grid, "salinity_ocean", PISM.WITHOUT_GHOSTS)
+S.set(S_w)
+
+with PISM.vec.Access(S):
+    for i,j in grid.points():
+        xi = grid.x(i)
+        S[i, j] = (xi > x_s) * S_e
+
+S.metadata().set_string("units", "g/kg")
+S.write(out)
+
+out.close()
+
 # Prescribe maximum ice extent.
 
 ice_extent_mask = PISM.IceModelVec2S(grid, "land_ice_area_fraction_retreat", PISM.WITHOUT_GHOSTS)
 ice_extent_mask.metadata().set_string("units", "1")
 
-x_min = 0e3
+x_min = 20e3
 x_max = 150e3
 
 with PISM.vec.Access(ice_extent_mask):
