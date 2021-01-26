@@ -12,7 +12,7 @@ ssafd_pc="-ssafd_ksp_type gmres -ssafd_ksp_norm_type unpreconditioned -ssafd_ksp
 
 extra_vars="topg,usurf,mask,thk,velbar_mag,velbase_mag,dHdt,effective_precipitation,flux_mag,velbase,velsurf_mag,bmelt"
 
-mpiexec -n $N pismr -i geometry.nc -bootstrap -My 3 -Mx 401 \
+mpiexec -n $N pismr -i real_geometry.nc -bootstrap -My 3 -Mx 401 \
       -grid.periodicity y \
       -geometry.flow_line_mode \
       -pik \
@@ -36,6 +36,7 @@ mpiexec -n $N pismr -i geometry.nc -bootstrap -My 3 -Mx 401 \
       -ocean th \
       -ocean.th.file ocean.nc \
       -calving.methods eigen_calving  \
+      -calving.eigen_calving.K 1e10 \
       -output.extra.file ex_${outfile}.nc \
       -output.extra.vars ${extra_vars} \
       -output.extra.times 10 \

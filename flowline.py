@@ -24,6 +24,7 @@ def bump(x, x0=0, zmin_l=-300, zmin_r=50, zmax=2000, sigma_l=10e3, sigma_r=25e3)
 
     return ((x <= x0) * left + (x > x0) * right)
 
+
 def grid(x_min, x_max, dx):
     "Allocate a flow-line grid."
     dy = dx

@@ -21,9 +21,12 @@ def update(ax, data, index):
 
     ax[0].cla()
     ax[1].cla()
-    ax_b.cla()
+    ax[2].cla()
+    # ax_b.cla()
 
-    speed = data.variables["velsurf_mag"][index, 1, :]
+    p = data.variables["effective_precipitation"][index, 1, :] / 1000
+    surface_speed = data.variables["velsurf_mag"][index, 1, :]
+    basal_speed = data.variables["velbase_mag"][index, 1, :]
     bmelt = data.variables["bmelt"][index, 1, :]
     topg = data.variables["topg"][index, 1, :]
     usurf = data.variables["usurf"][index, 1, :]
@@ -31,19 +34,25 @@ def update(ax, data, index):
     surface = np.ma.array(data=usurf, mask=(thk < 1))
     basal_topography = np.ma.array(data=(usurf-thk), mask=(thk < 1))
     basal_melt = np.ma.array(data=-bmelt, mask=(thk < 1))
-    speed = np.ma.array(data=speed, mask=(thk < 10))
-    ax[0].plot(x, speed, label="Speed (m/yr)")
-    ax_b.plot(x, basal_melt, color="k", label="Basal melt")
+    surface_speed = np.ma.array(data=surface_speed, mask=(thk < 10))
+    basal_speed = np.ma.array(data=basal_speed, mask=(thk < 10))
+    ax[0].plot(x, surface_speed, color="#e41a1c",label="Surface peed (m/yr)")
+    ax[0].plot(x, basal_speed, color="#377eb8",label="Basal Speed (m/yr)")
+    # ax_b.plot(x, basal_melt, color="k", label="Basal melt")
+    ax[1].plot(x, basal_topography, label="Ice bottom")
     ax[1].plot(x, topg, label="Bed")
-    ax[1].plot(x, surface, label="surface")
-    ax[1].plot(x, basal_topography, label="ice bottom")
-    ax[0].set_ylim(ymin=0, ymax=500)
+    ax[1].plot(x, surface, label="Ice surface")
+    ax[0].set_ylim(ymin=0, ymax=1000)
     ax[1].set_ylim(ymin=-750, ymax=2200)
-    ax[0].set_ylabel("Speed (m/r)")
-    ax_b.set_ylabel("Melt rate (m/r)")
+    ax[0].set_ylabel("Speed (m/yr)")
+    # ax_b.set_ylabel("Melt rate (m/yr)")
     ax[1].set_ylabel("Elevation (m)")
+    ax[0].legend()
     ax[1].legend()
-
+    ax[2].plot(x, p)
+    ax[2].set_ylim(0, 10)
+    ax[2].set_xlabel("Distance (km)")
+    ax[2].set_ylabel("Precipitation (m/yr)")
     ax[0].set_title(f"Time: {t / year}")
 
 
@@ -62,14 +71,14 @@ if __name__ == "__main__":
     writer = FFMpegWriter(fps=15, metadata={"title" : "Flowline run"})
 
     fig, ax = plt.subplots(
-        2,
+        3,
         1,
         sharex="col",
-        figsize=[6.2, 4.0],
+        figsize=[6.2, 6.0],
         clear=True,
     )
     fig.subplots_adjust(wspace=0.025)
-    ax_b = ax[0].twinx()
+    # ax_b = ax[0].twinx()
 
     with writer.saving(fig, outfile, 100):
         for i in range(N):

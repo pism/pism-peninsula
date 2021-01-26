@@ -61,10 +61,11 @@ def synthetic_geometry(grid):
 grid = flowline.grid(-25e3, 175e3, dx=500)
 
 real = real_geometry(grid)
+real.dump("real_geometry.nc")
 
 synth = synthetic_geometry(grid)
 
-synth.dump("geometry.nc")
+synth.dump("synth_geometry.nc")
 
 # Plot real and synthetic geometry
 
@@ -155,7 +156,7 @@ out = PISM.util.prepare_output("ocean.nc")
 
 x_s = 35e3
 
-TH_e = -2.0
+TH_e = -2.2
 TH_w = 0.23
 TH = PISM.IceModelVec2S(grid, "theta_ocean", PISM.WITHOUT_GHOSTS)
 TH.set(TH_w)
